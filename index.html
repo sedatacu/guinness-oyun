@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Guinness Tahmin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --purple:#7F77DD;--purple-dark:#3C3489;--purple-light:#EEEDFE;
+  --teal:#1D9E75;--teal-light:#E1F5EE;
+  --coral:#D85A30;
+  --amber:#EF9F27;--amber-light:#FAEEDA;
+  --gray:#888780;--gray-light:#F1EFE8;
+  --bg:#ffffff;--bg2:#f8f8f6;--text:#2c2c2a;--text2:#5f5e5a;--text3:#888780;
+  --border:#e8e6df;--radius:12px;--radius-sm:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg2);color:var(--text);min-height:100vh}
+.app{max-width:420px;margin:0 auto;padding:1rem;min-height:100vh}
+.screen{display:none;animation:fadeIn .2s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* Avatar */
+.avatar-wrap{display:flex;justify-content:center;margin-bottom:.75rem}
+.avatar-svg{transition:transform .1s}
+.anim-bounce{animation:bounce .4s ease}
+.anim-shake{animation:shake .4s ease}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+
+/* Bubble */
+.bubble{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:10px 14px;font-size:13px;color:var(--text);margin-bottom:1rem;text-align:center;position:relative;line-height:1.5}
+.bubble::before{content:'';position:absolute;top:-8px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-bottom-color:var(--border)}
+.bubble::after{content:'';position:absolute;top:-6.5px;left:50%;transform:translateX(-50%);border:7px solid transparent;border-bottom-color:var(--bg)}
+
+/* Inputs/buttons */
+input[type=text],input[type=number]{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:15px;background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+input:focus{border-color:var(--purple)}
+.btn{width:100%;padding:12px;border-radius:var(--radius);font-size:15px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--purple);color:white}
+.btn-primary:hover{background:var(--purple-dark)}
+.btn-primary:disabled{opacity:.5;cursor:default}
+.btn-outline{background:transparent;color:var(--purple);border:1.5px solid var(--purple)}
+.btn-outline:hover{background:var(--purple-light)}
+.btn+.btn{margin-top:8px}
+label{font-size:13px;color:var(--text2);display:block;margin-bottom:5px}
+
+/* Lang screen */
+.lang-search{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--bg);color:var(--text);margin-bottom:8px;outline:none}
+.lang-search:focus{border-color:var(--purple)}
+.lang-list{max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg)}
+.lang-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:14px;color:var(--text);transition:background .1s}
+.lang-item:last-child{border-bottom:none}
+.lang-item:hover,.lang-item.selected{background:var(--purple-light)}
+
+/* Lobby */
+.row2{display:flex;gap:8px;margin-bottom:1rem}
+.row2 input{flex:1}
+.player-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:14px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--teal);flex-shrink:0}
+.host-tag{font-size:11px;background:var(--teal-light);color:var(--teal);padding:2px 7px;border-radius:99px;margin-left:4px}
+.room-badge{display:inline-block;background:var(--purple-light);color:var(--purple-dark);border-radius:var(--radius-sm);padding:6px 18px;font-size:18px;font-weight:500;letter-spacing:2px;margin-bottom:.75rem}
+
+/* Question screen */
+.q-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
+.q-progress-label{font-size:13px;color:var(--text2)}
+.q-timer{font-size:20px;font-weight:700;color:var(--coral);min-width:32px;text-align:right}
+.q-timer.urgent{animation:pulse .5s ease infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.progress-bar{height:4px;background:var(--gray-light);border-radius:2px;margin-bottom:1.25rem;overflow:hidden}
+.progress-fill{height:100%;background:var(--purple);border-radius:2px;transition:width 1s linear}
+.avatar-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:1.25rem}
+.avatar-mini{width:56px;height:56px;flex-shrink:0}
+.q-bubble{flex:1;background:var(--purple-light);border-radius:12px;border-bottom-left-radius:0;padding:9px 13px;font-size:13px;font-weight:500;color:#26215C;line-height:1.5}
+.cat-badge{font-size:11px;background:var(--bg2);color:var(--text2);display:inline-block;padding:3px 9px;border-radius:99px;margin-bottom:.75rem}
+.q-text{font-size:15px;font-weight:500;color:var(--text);margin-bottom:1.25rem;line-height:1.6}
+
+/* Result screen */
+.correct-val{font-size:30px;font-weight:700;color:var(--purple);margin-bottom:1.25rem;text-align:center}
+.answer-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:var(--radius-sm);margin-bottom:5px;background:var(--bg2);font-size:14px}
+.answer-row.winner{background:var(--teal-light);border:1px solid #9FE1CB}
+.a-name{font-weight:500}
+.a-score{font-size:13px;color:var(--teal);font-weight:500}
+.a-diff{font-size:12px;color:var(--text3)}
+
+/* Scoreboard */
+.score-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:7px;background:var(--bg2);font-size:14px}
+.score-row.top{background:var(--purple-light)}
+.score-rank{font-size:17px;width:26px;text-align:center}
+.score-name{flex:1;font-weight:500}
+.score-pts{font-weight:500;color:var(--purple)}
+.tabs{display:flex;gap:4px;margin-bottom:1.25rem;background:var(--bg2);padding:4px;border-radius:var(--radius-sm)}
+.tab{flex:1;padding:8px;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-radius:6px;transition:all .15s}
+.tab.active{background:var(--bg);color:var(--purple);border:1px solid var(--border)}
+.global-row{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:var(--radius-sm);margin-bottom:5px;background:var(--bg2);font-size:14px}
+.global-row.me{background:var(--purple-light);border:1px solid #AFA9EC}
+.g-name{flex:1;font-weight:500}
+.g-pct{font-weight:500;color:var(--purple);min-width:38px;text-align:right}
+.pct-bar-bg{height:3px;background:var(--border);border-radius:2px;margin-top:2px}
+.pct-bar{height:3px;background:var(--purple);border-radius:2px}
+.g-sub{font-size:11px;color:var(--text3)}
+
+/* Connection status */
+.status-bar{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);padding:4px 0;margin-bottom:.75rem}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--gray)}
+.status-dot.connected{background:var(--teal)}
+.status-dot.error{background:var(--coral)}
+
+/* Waiting dots animation */
+.waiting-dots span{animation:blink 1.2s ease infinite}
+.waiting-dots span:nth-child(2){animation-delay:.2s}
+.waiting-dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+
+.title-lg{font-size:22px;font-weight:600;color:var(--text);text-align:center;margin-bottom:4px}
+.subtitle{font-size:14px;color:var(--text2);text-align:center;margin-bottom:1.5rem}
+.section-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:.75rem}
+.hint{font-size:12px;color:var(--text3);text-align:center;margin-top:.5rem}
+.gap{margin-bottom:1rem}
+.gap-sm{margin-bottom:.5rem}
+.center{text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ SCREEN: Language ═══ -->
+<div class="screen active" id="s-lang">
+  <div style="padding:1.5rem 0;text-align:center">
+    <div class="avatar-wrap">
+      <svg id="av-lang" class="avatar-svg" width="80" height="80" viewBox="0 0 100 100">
+        <circle cx="50" cy="34" r="22" fill="#7F77DD"/>
+        <circle cx="50" cy="34" r="17" fill="#FAC775"/>
+        <ellipse cx="43" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <ellipse cx="57" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <circle cx="43" cy="32" r="2.2" fill="#26215C" id="le-l"/>
+        <circle cx="57" cy="32" r="2.2" fill="#26215C" id="le-r"/>
+        <path d="M44 40 Q50 46 56 40" stroke="#D85A30" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="43" cy="34" r="4" fill="#F0997B" opacity="0.4"/>
+        <circle cx="57" cy="34" r="4" fill="#F0997B" opacity="0.4"/>
+        <rect x="28" y="52" width="44" height="10" rx="5" fill="#AFA9EC"/>
+        <rect x="28" y="65" width="44" height="15" rx="5" fill="#AFA9EC"/>
+        <rect x="18" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+        <rect x="70" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+      </svg>
+    </div>
+    <p class="title-lg">Guinness Tahmin!</p>
+    <p class="subtitle">Dünyanın en uç rekorlarını tahmin et!</p>
+    <input class="lang-search" type="text" placeholder="Dil ara / Search language..." oninput="filterLangs(this.value)" id="lang-search"/>
+    <div class="lang-list" id="lang-list"></div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: Lobby ═══ -->
+<div class="screen" id="s-lobby">
+  <div style="padding:.5rem 0">
+    <div class="avatar-wrap">
+      <svg id="av-lobby" class="avatar-svg" width="84" height="84" viewBox="0 0 100 100">
+        <circle cx="50" cy="34" r="22" fill="#7F77DD"/>
+        <circle cx="50" cy="34" r="17" fill="#FAC775"/>
+        <ellipse cx="43" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <ellipse cx="57" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <circle cx="43" cy="32" r="2.2" fill="#26215C"/>
+        <circle cx="57" cy="32" r="2.2" fill="#26215C"/>
+        <path d="M44 40 Q50 46 56 40" stroke="#D85A30" stroke-width="2" fill="none" stroke-linecap="round" id="lob-mouth"/>
+        <circle cx="43" cy="34" r="4" fill="#F0997B" opacity="0.4"/>
+        <circle cx="57" cy="34" r="4" fill="#F0997B" opacity="0.4"/>
+        <rect x="28" y="52" width="44" height="10" rx="5" fill="#AFA9EC"/>
+        <rect x="28" y="65" width="44" height="15" rx="5" fill="#AFA9EC"/>
+        <rect x="18" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+        <rect x="70" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+      </svg>
+    </div>
+    <div class="bubble" id="lobby-bubble">Merhaba! Ben Max, Guinness sunucun!</div>
+    <div class="status-bar"><div class="status-dot" id="ws-dot"></div><span id="ws-label">Sunucuya bağlanılıyor...</span></div>
+    <div class="gap">
+      <label id="lbl-name">Adın</label>
+      <input type="text" id="inp-name" placeholder="..."/>
+    </div>
+    <div class="row2">
+      <input type="text" id="inp-code" placeholder="Oda kodu (katılmak için)"/>
+    </div>
+    <button class="btn btn-primary" id="btn-host" onclick="hostGame()">Oda Kur</button>
+    <button class="btn btn-outline" id="btn-join" onclick="joinGame()">Odaya Katıl</button>
+    <button class="btn btn-outline" id="btn-gl" onclick="showGlobal()" style="margin-top:8px">🌍 Dünya Sıralaması</button>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: Waiting ═══ -->
+<div class="screen" id="s-wait">
+  <div style="text-align:center;padding:.75rem 0">
+    <p style="font-size:13px;color:var(--text2);margin-bottom:5px" id="lbl-code">Oda Kodu</p>
+    <div class="room-badge" id="room-badge">G-0000</div>
+    <p class="hint" id="hint-share">Kodu arkadaşlarınla paylaş</p>
+    <div class="avatar-wrap" style="margin-top:1rem">
+      <svg class="avatar-svg" width="70" height="70" viewBox="0 0 100 100">
+        <circle cx="50" cy="34" r="22" fill="#7F77DD"/>
+        <circle cx="50" cy="34" r="17" fill="#FAC775"/>
+        <ellipse cx="43" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <ellipse cx="57" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <circle cx="43" cy="32" r="2.2" fill="#26215C"/>
+        <circle cx="57" cy="32" r="2.2" fill="#26215C"/>
+        <path d="M44 40 Q50 46 56 40" stroke="#D85A30" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <circle cx="43" cy="34" r="4" fill="#F0997B" opacity="0.4"/>
+        <circle cx="57" cy="34" r="4" fill="#F0997B" opacity="0.4"/>
+        <rect x="28" y="52" width="44" height="10" rx="5" fill="#AFA9EC"/>
+        <rect x="28" y="65" width="44" height="15" rx="5" fill="#AFA9EC"/>
+        <rect x="18" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+        <rect x="70" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+      </svg>
+    </div>
+    <div class="bubble" id="wait-bubble">Oyuncular bekleniyor<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span></div>
+    <div id="players-list" style="text-align:left;margin-bottom:1rem"></div>
+    <button class="btn btn-primary" id="btn-start" onclick="startGame()">Oyunu Başlat</button>
+    <p class="hint" id="hint-host">Sadece host başlatabilir</p>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: Loading questions ═══ -->
+<div class="screen" id="s-loading">
+  <div style="text-align:center;padding:3rem 1rem">
+    <div class="avatar-wrap">
+      <svg id="av-load" class="avatar-svg" width="90" height="90" viewBox="0 0 100 100">
+        <circle cx="50" cy="34" r="22" fill="#7F77DD"/>
+        <circle cx="50" cy="34" r="17" fill="#FAC775"/>
+        <ellipse cx="43" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <ellipse cx="57" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <circle cx="43" cy="32" r="2.2" fill="#26215C" id="ll-l"/>
+        <circle cx="57" cy="32" r="2.2" fill="#26215C" id="ll-r"/>
+        <path d="M42 38 Q50 48 58 38" stroke="#D85A30" stroke-width="2.5" fill="none" stroke-linecap="round" id="ll-mouth"/>
+        <circle cx="43" cy="34" r="4" fill="#F0997B" opacity="0.5"/>
+        <circle cx="57" cy="34" r="4" fill="#F0997B" opacity="0.5"/>
+        <rect x="28" y="52" width="44" height="10" rx="5" fill="#AFA9EC"/>
+        <rect x="28" y="65" width="44" height="15" rx="5" fill="#AFA9EC"/>
+        <rect x="18" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+        <rect x="70" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+      </svg>
+    </div>
+    <p style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:8px" id="load-msg">Yapay zeka soruları hazırlıyor...</p>
+    <p style="font-size:13px;color:var(--text2)">Guinness rekorları kontrol ediliyor 📚</p>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: Question ═══ -->
+<div class="screen" id="s-question">
+  <div>
+    <div class="q-header">
+      <span class="q-progress-label" id="q-num">1 / 20</span>
+      <span class="q-timer" id="q-timer">30</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="q-bar" style="width:100%"></div></div>
+    <div class="avatar-row">
+      <svg class="avatar-mini avatar-svg" id="av-q" viewBox="0 0 100 100">
+        <circle cx="50" cy="34" r="22" fill="#7F77DD"/>
+        <circle cx="50" cy="34" r="17" fill="#FAC775"/>
+        <ellipse cx="43" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <ellipse cx="57" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <circle cx="43" cy="32" r="2.2" fill="#26215C" id="q-el"/>
+        <circle cx="57" cy="32" r="2.2" fill="#26215C" id="q-er"/>
+        <path d="M44 40 Q50 46 56 40" stroke="#D85A30" stroke-width="2" fill="none" stroke-linecap="round" id="q-mouth"/>
+        <circle cx="43" cy="34" r="4" fill="#F0997B" opacity="0.4"/>
+        <circle cx="57" cy="34" r="4" fill="#F0997B" opacity="0.4"/>
+        <rect x="28" y="52" width="44" height="10" rx="5" fill="#AFA9EC"/>
+        <rect x="28" y="65" width="44" height="15" rx="5" fill="#AFA9EC"/>
+        <rect x="18" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+        <rect x="70" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+      </svg>
+      <div class="q-bubble" id="q-comment">...</div>
+    </div>
+    <span class="cat-badge" id="q-cat"></span>
+    <p class="q-text" id="q-text"></p>
+    <div class="gap">
+      <label id="lbl-ans">Tahminin:</label>
+      <input type="number" id="inp-ans" placeholder="Sayı gir..." style="text-align:center;font-size:18px;font-weight:500"/>
+    </div>
+    <button class="btn btn-primary" id="btn-ans" onclick="submitAnswer()">Gönder</button>
+    <p class="hint" id="lbl-submitted" style="display:none;margin-top:.5rem">✓ Cevabın kaydedildi, diğerleri bekleniyor...</p>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: Round Result ═══ -->
+<div class="screen" id="s-result">
+  <div style="text-align:center">
+    <div class="avatar-wrap">
+      <svg id="av-res" class="avatar-svg" width="76" height="76" viewBox="0 0 100 100">
+        <circle cx="50" cy="34" r="22" fill="#7F77DD"/>
+        <circle cx="50" cy="34" r="17" fill="#FAC775"/>
+        <ellipse cx="43" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <ellipse cx="57" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <circle cx="43" cy="32" r="2.2" fill="#26215C" id="r-el"/>
+        <circle cx="57" cy="32" r="2.2" fill="#26215C" id="r-er"/>
+        <path d="M44 40 Q50 46 56 40" stroke="#D85A30" stroke-width="2" fill="none" stroke-linecap="round" id="r-mouth"/>
+        <circle cx="43" cy="34" r="4" fill="#F0997B" opacity="0.4"/>
+        <circle cx="57" cy="34" r="4" fill="#F0997B" opacity="0.4"/>
+        <rect x="28" y="52" width="44" height="10" rx="5" fill="#AFA9EC"/>
+        <rect x="28" y="65" width="44" height="15" rx="5" fill="#AFA9EC"/>
+        <rect x="18" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+        <rect x="70" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+      </svg>
+    </div>
+    <div class="bubble" id="res-bubble">...</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:3px">Doğru Cevap</p>
+    <p class="correct-val" id="res-answer">---</p>
+    <div id="res-list" style="text-align:left;margin-bottom:1.25rem"></div>
+    <p style="font-size:12px;color:var(--text3)" id="next-hint">Sonraki soru 5 saniyede...</p>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: Final ═══ -->
+<div class="screen" id="s-final">
+  <div>
+    <div class="avatar-wrap">
+      <svg id="av-fin" class="avatar-svg" width="80" height="80" viewBox="0 0 100 100">
+        <circle cx="50" cy="34" r="22" fill="#7F77DD"/>
+        <circle cx="50" cy="34" r="17" fill="#FAC775"/>
+        <ellipse cx="43" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <ellipse cx="57" cy="31" rx="3.5" ry="4.5" fill="white"/>
+        <circle cx="43" cy="32" r="2.2" fill="#26215C"/>
+        <circle cx="57" cy="32" r="2.2" fill="#26215C"/>
+        <path d="M42 38 Q50 48 58 38" stroke="#D85A30" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <circle cx="43" cy="34" r="5" fill="#F0997B" opacity="0.5"/>
+        <circle cx="57" cy="34" r="5" fill="#F0997B" opacity="0.5"/>
+        <rect x="28" y="52" width="44" height="10" rx="5" fill="#AFA9EC"/>
+        <rect x="28" y="65" width="44" height="15" rx="5" fill="#AFA9EC"/>
+        <rect x="18" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+        <rect x="70" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
+      </svg>
+    </div>
+    <div class="bubble" id="fin-bubble">Oyun bitti!</div>
+    <div class="tabs">
+      <button class="tab active" id="tab-local" onclick="switchTab('local')">Bu Oda</button>
+      <button class="tab" id="tab-global" onclick="switchTab('global')">🌍 Dünya</button>
+    </div>
+    <div id="local-board"></div>
+    <div id="global-board" style="display:none"></div>
+    <button class="btn btn-primary" onclick="resetGame()" style="margin-top:1.25rem">Tekrar Oyna</button>
+  </div>
+</div>
+
+<!-- ═══ SCREEN: Global standalone ═══ -->
+<div class="screen" id="s-global">
+  <div>
+    <p class="title-lg" style="margin-bottom:4px">🌍 Dünya Sıralaması</p>
+    <p class="subtitle">En iyi tahminciler — doğru cevap yüzdesi</p>
+    <div id="global-main"></div>
+    <button class="btn btn-outline" onclick="show('s-lobby')" style="margin-top:1.25rem">Geri</button>
+  </div>
+</div>
+
+</div><!-- .app -->
+
+<script>
+// ─── Languages ───────────────────────────────────────────────────
+const LANGS = [
+  {c:'tr',f:'🇹🇷',n:'Türkçe'},{c:'en',f:'🇬🇧',n:'English'},{c:'de',f:'🇩🇪',n:'Deutsch'},
+  {c:'fr',f:'🇫🇷',n:'Français'},{c:'es',f:'🇪🇸',n:'Español'},{c:'it',f:'🇮🇹',n:'Italiano'},
+  {c:'pt',f:'🇧🇷',n:'Português'},{c:'ru',f:'🇷🇺',n:'Русский'},{c:'ar',f:'🇸🇦',n:'العربية'},
+  {c:'zh',f:'🇨🇳',n:'中文'},{c:'ja',f:'🇯🇵',n:'日本語'},{c:'ko',f:'🇰🇷',n:'한국어'},
+  {c:'hi',f:'🇮🇳',n:'हिन्दी'},{c:'nl',f:'🇳🇱',n:'Nederlands'},{c:'pl',f:'🇵🇱',n:'Polski'},
+  {c:'sv',f:'🇸🇪',n:'Svenska'},{c:'uk',f:'🇺🇦',n:'Українська'},{c:'id',f:'🇮🇩',n:'Bahasa Indonesia'},
+  {c:'vi',f:'🇻🇳',n:'Tiếng Việt'},{c:'th',f:'🇹🇭',n:'ภาษาไทย'},{c:'el',f:'🇬🇷',n:'Ελληνικά'},
+  {c:'ro',f:'🇷🇴',n:'Română'},{c:'cs',f:'🇨🇿',n:'Čeština'},{c:'hu',f:'🇭🇺',n:'Magyar'},
+  {c:'fi',f:'🇫🇮',n:'Suomi'},{c:'da',f:'🇩🇰',n:'Dansk'},{c:'no',f:'🇳🇴',n:'Norsk'},
+  {c:'he',f:'🇮🇱',n:'עברית'},{c:'fa',f:'🇮🇷',n:'فارسی'},{c:'ms',f:'🇲🇾',n:'Bahasa Melayu'},
+];
+
+// ─── UI strings ──────────────────────────────────────────────────
+const UI = {
+  tr:{
+    maxHello:['Merhaba! Ben Max, Guinness sunucun! 🎯','Hoş geldin! Rekorlar seni bekliyor!','Hazır mısın? Dünya sana meydan okuyor!'],
+    loading:'Yapay zeka Guinness soruları hazırlıyor...',
+    roomCode:'Oda Kodu',share:'Kodu arkadaşlarınla paylaş',
+    hostOnly:'Sadece host başlatabilir',
+    waitMsg:['Herkesi bekliyorum!','Yavaş geliyorlar ama tamam!','Hazır mısın, rekor bekleyemez!'],
+    nameLabel:'Adın',hostBtn:'Oda Kur',joinBtn:'Odaya Katıl',
+    ansLabel:'Tahminin:',submitBtn:'Gönder',submitted:'✓ Cevabın kaydedildi...',
+    correctLbl:'Doğru Cevap',nextHint:'Sonraki soru 5 saniyede...',
+    thisRoom:'Bu Oda',world:'🌍 Dünya',again:'Tekrar Oyna',
+    funnyComments:['Bu soruyu ben de ilk kez duyuyorum! 😵','Kimin aklına gelir böyle bir rekord?!','Ben de bilmiyorum açıkçası, tahmin yürütüyorum!','HAHAha... ciddi olmak istedim ama olmuyor!'],
+    normalComments:['Bakalım bilebilecek misin?','Düşün iyi, tahmin et!','Bu rekoru biliyor musun?'],
+    winMsg:(n)=>`Tebrikler ${n}! En yakın tahmindi! 🏆`,
+    finMsg:(n)=>`Oyun bitti! Şampiyon: ${n}! 🎉`,
+  },
+  en:{
+    maxHello:['Hi! I\'m Max, your Guinness host! 🎯','Welcome! World records await!','Ready? The records are calling your name!'],
+    loading:'AI is generating Guinness questions...',
+    roomCode:'Room Code',share:'Share this code with friends',
+    hostOnly:'Only the host can start',
+    waitMsg:['Waiting for everyone!','Slowly but surely!','The records can\'t wait forever!'],
+    nameLabel:'Your name',hostBtn:'Create Room',joinBtn:'Join Room',
+    ansLabel:'Your guess:',submitBtn:'Submit',submitted:'✓ Answer received, waiting for others...',
+    correctLbl:'Correct Answer',nextHint:'Next question in 5 seconds...',
+    thisRoom:'This Room',world:'🌍 World',again:'Play Again',
+    funnyComments:['I genuinely have no idea about this one! 😵','Who even comes up with these records?!','I\'m just as confused as you, honestly!','HAHAha... I was trying to be serious there!'],
+    normalComments:['Think you know this one?','Guess smart, guess close!','Do you know this record?'],
+    winMsg:(n)=>`Amazing ${n}! That was the closest guess! 🏆`,
+    finMsg:(n)=>`Game over! Champion: ${n}! 🎉`,
+  },
+};
+function t(){return UI[lang]||UI.en;}
+
+// ─── State ───────────────────────────────────────────────────────
+let lang = 'tr';
+let playerName = '';
+let roomCode = '';
+let isHost = false;
+let ws = null;
+let currentQ = null;
+let answered = false;
+let timerInt = null;
+let audioCtx = null;
+
+// ─── WebSocket setup ─────────────────────────────────────────────
+const WS_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? `ws://${location.host}`
+  : `wss://${location.hostname}`;  // Change to your deployed domain
+
+function connectWS() {
+  setWsStatus('connecting');
+  try {
+    ws = new WebSocket(WS_URL);
+  } catch(e) {
+    setWsStatus('error');
+    return;
+  }
+  ws.onopen = () => setWsStatus('connected');
+  ws.onclose = () => { setWsStatus('disconnected'); setTimeout(connectWS, 3000); };
+  ws.onerror = () => setWsStatus('error');
+  ws.onmessage = (e) => {
+    try { handleMsg(JSON.parse(e.data)); } catch(_) {}
+  };
+}
+
+function wsSend(data) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
+}
+
+function setWsStatus(s) {
+  const dot = document.getElementById('ws-dot');
+  const lbl = document.getElementById('ws-label');
+  if (!dot || !lbl) return;
+  const map = {
+    connecting: ['','Sunucuya bağlanılıyor...'],
+    connected:  ['connected','Bağlandı'],
+    disconnected:['error','Bağlantı kesildi — yeniden deneniyor...'],
+    error:      ['error','Bağlantı hatası'],
+  };
+  const [cls, text] = map[s] || ['',''];
+  dot.className = 'status-dot ' + cls;
+  lbl.textContent = text;
+}
+
+// ─── Message handler ─────────────────────────────────────────────
+function handleMsg(msg) {
+  switch(msg.type) {
+    case 'hosted':
+      roomCode = msg.code;
+      document.getElementById('room-badge').textContent = msg.code;
+      document.getElementById('lbl-code').textContent = t().roomCode;
+      document.getElementById('hint-share').textContent = t().share;
+      renderPlayers(msg.players);
+      show('s-wait');
+      playSound('join');
+      break;
+
+    case 'joined':
+      roomCode = msg.code;
+      document.getElementById('room-badge').textContent = msg.code;
+      document.getElementById('lbl-code').textContent = t().roomCode;
+      document.getElementById('hint-share').textContent = t().share;
+      document.getElementById('btn-start').disabled = true;
+      document.getElementById('hint-host').textContent = t().hostOnly;
+      renderPlayers(msg.players);
+      show('s-wait');
+      playSound('join');
+      break;
+
+    case 'player_joined':
+      renderPlayers(msg.players);
+      document.getElementById('wait-bubble').innerHTML = `${msg.name} katıldı! 👋`;
+      playSound('join');
+      break;
+
+    case 'player_left':
+      renderPlayers(msg.players);
+      break;
+
+    case 'error':
+      alert(msg.msg);
+      break;
+
+    case 'game_starting':
+      show('s-loading');
+      animateAvatar('av-load', 'bounce');
+      playSound('start');
+      break;
+
+    case 'question':
+      currentQ = msg.question;
+      answered = false;
+      showQuestion(msg.index, msg.total, msg.question);
+      break;
+
+    case 'tick':
+      updateTimer(msg.t);
+      break;
+
+    case 'round_result':
+      showResult(msg);
+      break;
+
+    case 'game_over':
+      showFinal(msg);
+      break;
+  }
+}
+
+// ─── Game actions ────────────────────────────────────────────────
+function hostGame() {
+  playerName = document.getElementById('inp-name').value.trim() || 'Player';
+  isHost = true;
+  wsSend({ type: 'host', name: playerName, lang });
+}
+
+function joinGame() {
+  playerName = document.getElementById('inp-name').value.trim() || 'Player';
+  const code = document.getElementById('inp-code').value.trim().toUpperCase();
+  if (!code) { alert('Oda kodunu gir!'); return; }
+  isHost = false;
+  wsSend({ type: 'join', name: playerName, code });
+}
+
+function startGame() {
+  if (!isHost) return;
+  wsSend({ type: 'start' });
+}
+
+function submitAnswer() {
+  if (answered) return;
+  const val = parseFloat(document.getElementById('inp-ans').value);
+  if (isNaN(val)) { document.getElementById('inp-ans').focus(); return; }
+  answered = true;
+  wsSend({ type: 'answer', value: val });
+  document.getElementById('btn-ans').disabled = true;
+  document.getElementById('lbl-submitted').style.display = 'block';
+  playSound('submit');
+}
+
+// ─── UI rendering ────────────────────────────────────────────────
+function showQuestion(index, total, q) {
+  show('s-question');
+  document.getElementById('q-num').textContent = `${index+1} / ${total}`;
+  document.getElementById('q-cat').textContent = q.category;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('lbl-ans').textContent = t().ansLabel;
+  document.getElementById('btn-ans').textContent = t().submitBtn;
+  document.getElementById('btn-ans').disabled = false;
+  document.getElementById('inp-ans').value = '';
+  document.getElementById('lbl-submitted').style.display = 'none';
+  document.getElementById('q-bar').style.width = '100%';
+  document.getElementById('q-timer').textContent = '30';
+  document.getElementById('q-timer').classList.remove('urgent');
+
+  const comments = q.funny ? t().funnyComments : t().normalComments;
+  const comment = q.maxComment || comments[Math.floor(Math.random() * comments.length)];
+  document.getElementById('q-comment').textContent = comment;
+
+  if (q.funny) {
+    setMouth('q-mouth', 'confused');
+    animateAvatar('av-q', 'shake');
+    playSound('funny');
+  } else {
+    setMouth('q-mouth', 'smile');
+    animateAvatar('av-q', 'bounce');
+    playSound('question');
+  }
+}
+
+function updateTimer(t) {
+  const el = document.getElementById('q-timer');
+  if (!el) return;
+  el.textContent = t;
+  document.getElementById('q-bar').style.width = Math.round(t/30*100) + '%';
+  if (t <= 5) {
+    el.classList.add('urgent');
+    playSound('tick');
+  }
+}
+
+function showResult(msg) {
+  show('s-result');
+  const comment = msg.maxComment || '...';
+  document.getElementById('res-bubble').textContent = comment;
+  document.getElementById('res-answer').textContent = msg.answer.toLocaleString() + ' ' + msg.unit;
+
+  const isWinner = msg.winner === playerName;
+  if (isWinner) { setMouth('r-mouth','laugh'); animateAvatar('av-res','bounce'); playSound('win'); }
+  else { setMouth('r-mouth','smile'); playSound('result'); }
+
+  const ranks = ['🏆','🥈','🥉'];
+  document.getElementById('res-list').innerHTML = (msg.results||[]).map((r,i) => {
+    const isMe = r.name === playerName;
+    return `<div class="answer-row${i===0?' winner':''}">
+      <span>${ranks[i]||''} <span class="a-name${isMe?' '+'':''}">${r.name}${isMe?' (sen)':''}</span></span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span style="font-weight:500">${r.value !== null ? r.value.toLocaleString() + ' ' + msg.unit : '—'}</span>
+        ${i===0 ? '<span class="a-score">+100p</span>' : (r.diff !== null ? '<span class="a-diff">±'+r.diff.toLocaleString()+'</span>' : '')}
+      </span>
+    </div>`;
+  }).join('');
+}
+
+function showFinal(msg) {
+  show('s-final');
+  const champion = msg.finalScores[0]?.name || '?';
+  document.getElementById('fin-bubble').textContent = t().finMsg(champion);
+  animateAvatar('av-fin', 'bounce');
+  playSound('fanfare');
+
+  const ranks = ['🥇','🥈','🥉'];
+  document.getElementById('local-board').innerHTML = (msg.finalScores||[]).map((p,i) => `
+    <div class="score-row${i===0?' top':''}">
+      <span class="score-rank">${ranks[i]||i+1+'.'}</span>
+      <span class="score-name">${p.name}${p.name===playerName?' ⭐':''}</span>
+      <span class="score-pts">${p.score}p</span>
+    </div>
+  `).join('');
+
+  renderGlobalBoard('global-board', msg.globalBoard || [], playerName);
+  renderGlobalBoard('global-main', msg.globalBoard || [], playerName);
+}
+
+function renderPlayers(players) {
+  document.getElementById('players-list').innerHTML = (players||[]).map(p => `
+    <div class="player-item">
+      <div class="dot"></div>
+      <span>${p.name}</span>
+      ${p.isHost ? '<span class="host-tag">host</span>' : ''}
+    </div>
+  `).join('');
+}
+
+function renderGlobalBoard(elId, board, myName) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = (board||[]).map((p,i) => `
+    <div class="global-row${p.name===myName?' me':''}">
+      <span style="font-size:13px;min-width:20px;color:var(--text3)">${i+1}.</span>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between">
+          <span class="g-name">${p.name}${p.name===myName?' ⭐':''}</span>
+          <span class="g-pct">${p.pct}%</span>
+        </div>
+        <div class="pct-bar-bg"><div class="pct-bar" style="width:${p.pct}%"></div></div>
+        <span class="g-sub">${p.games} oyun</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-local').classList.toggle('active', tab==='local');
+  document.getElementById('tab-global').classList.toggle('active', tab==='global');
+  document.getElementById('local-board').style.display = tab==='local' ? 'block' : 'none';
+  document.getElementById('global-board').style.display = tab==='global' ? 'block' : 'none';
+}
+
+async function showGlobal() {
+  show('s-global');
+  try {
+    const res = await fetch(WS_URL.replace('ws','http').replace('wss','https') + '/leaderboard');
+    const data = await res.json();
+    renderGlobalBoard('global-main', data, playerName);
+  } catch(e) {}
+}
+
+// ─── Avatar helpers ──────────────────────────────────────────────
+function animateAvatar(id, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('anim-bounce','anim-shake');
+  void el.offsetWidth;
+  el.classList.add('anim-'+type);
+  setTimeout(() => el.classList.remove('anim-bounce','anim-shake'), 600);
+}
+
+function setMouth(id, type) {
+  const m = document.getElementById(id);
+  if (!m) return;
+  const paths = {
+    smile: 'M44 40 Q50 46 56 40',
+    laugh: 'M42 38 Q50 48 58 38',
+    confused: 'M43 42 Q50 38 57 42',
+    shocked: 'M44 38 Q50 48 56 38',
+  };
+  m.setAttribute('d', paths[type] || paths.smile);
+}
+
+// ─── Sound engine (Web Audio API) ────────────────────────────────
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playSound(type) {
+  try {
+    if (!audioCtx) initAudio();
+    if (!audioCtx) return;
+    const ac = audioCtx;
+
+    const play = (freqs, dur, vol=0.18, wave='sine') => {
+      freqs.forEach(([freq, start, end]) => {
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.connect(g); g.connect(ac.destination);
+        o.type = wave;
+        o.frequency.setValueAtTime(freq, ac.currentTime + start);
+        g.gain.setValueAtTime(0, ac.currentTime + start);
+        g.gain.linearRampToValueAtTime(vol, ac.currentTime + start + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + start + dur);
+        o.start(ac.currentTime + start);
+        o.stop(ac.currentTime + start + dur + 0.01);
+      });
+    };
+
+    if (type === 'question')  play([[440,0],[550,0.1],[660,0.2]], 0.25, 0.12);
+    else if (type === 'funny') play([[200,0],[150,0.1],[250,0.2],[180,0.3]], 0.2, 0.1,'sawtooth');
+    else if (type === 'submit') play([[523,0],[659,0.1]], 0.2, 0.1);
+    else if (type === 'tick')  play([[880,0]], 0.08, 0.06);
+    else if (type === 'win')   play([[523,0],[659,0.15],[784,0.3],[1047,0.5]], 0.3, 0.15);
+    else if (type === 'result') play([[440,0],[392,0.2]], 0.25, 0.1);
+    else if (type === 'join')  play([[523,0],[659,0.12]], 0.18, 0.1);
+    else if (type === 'start') play([[262,0],[330,0.1],[392,0.2],[523,0.35]], 0.3, 0.15);
+    else if (type === 'fanfare') {
+      play([[523,0],[659,0.1],[784,0.2],[523,0.4],[659,0.5],[784,0.6],[1047,0.75]], 0.35, 0.18);
+    }
+  } catch(e) {}
+}
+
+// ─── Screen / lang helpers ───────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function selectLang(code) {
+  lang = code;
+  renderLangList();
+  initAudio(); // unlock audio on first user interaction
+  // Update lobby UI
+  document.getElementById('lobby-bubble').textContent = t().maxHello[Math.floor(Math.random()*t().maxHello.length)];
+  document.getElementById('lbl-name').textContent = t().nameLabel;
+  document.getElementById('btn-host').textContent = t().hostBtn;
+  document.getElementById('btn-join').textContent = t().joinBtn;
+  setTimeout(() => show('s-lobby'), 200);
+}
+
+function filterLangs(v) { renderLangList(v); }
+
+function renderLangList(filter = '') {
+  const list = document.getElementById('lang-list');
+  const f = filter.toLowerCase();
+  const filtered = LANGS.filter(l => l.n.toLowerCase().includes(f) || l.c.includes(f));
+  list.innerHTML = filtered.map(l => `
+    <div class="lang-item${l.c===lang?' selected':''}" onclick="selectLang('${l.c}')">
+      <span style="font-size:18px">${l.f}</span><span>${l.n}</span>
+    </div>
+  `).join('');
+}
+
+function resetGame() {
+  roomCode = '';
+  isHost = false;
+  currentQ = null;
+  answered = false;
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-code').value = '';
+  show('s-lang');
+  renderLangList();
+}
+
+// ─── Blink eyes ─────────────────────────────────────────────────
+setInterval(() => {
+  ['le-l','le-r','q-el','q-er','r-el','r-er','ll-l','ll-r'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.setAttribute('r','0.3');
+    setTimeout(() => el.setAttribute('r','2.2'), 120);
+  });
+}, 3200);
+
+// ─── Init ────────────────────────────────────────────────────────
+renderLangList();
+connectWS();
+</script>
+</body>
+</html>
