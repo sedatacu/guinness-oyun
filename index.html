@@ -266,7 +266,7 @@ label{font-size:13px;color:var(--text2);display:block;margin-bottom:5px}
         <rect x="18" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
         <rect x="70" y="52" width="12" height="24" rx="5" fill="#AFA9EC"/>
       </svg>
-      <div class="q-bubble" id="q-comment">...</div>
+      <div class="q-bubble" id="q-comment-hidden">...</div>
     </div>
     <span class="cat-badge" id="q-cat"></span>
     <p class="q-text" id="q-text"></p>
@@ -564,7 +564,7 @@ function showQuestion(index, total, q) {
 
   const comments = q.funny ? t().funnyComments : t().normalComments;
   const comment = q.maxComment || comments[Math.floor(Math.random() * comments.length)];
-  document.getElementById('q-comment').textContent = comment;
+  document.getElementById('q-comment-hidden').textContent = comment;
 
   if (q.funny) {
     setMouth('q-mouth', 'confused');
